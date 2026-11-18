@@ -31,10 +31,22 @@ class PointsCalculatorTest {
 
 
     @Test 
-    public void throwsExceptionForUnknownMember(){
+    public void throwExceptionForUnknownMember(){
         PointsCalculator calculator = new PointsCalculator();
         assertThrows(IllegalArgumentException.class, () -> {
             calculator.calculatePoints("unknown", 100.0);
         });
+    }
+
+
+    @Test 
+    public void throwExceptionForNegativeAmounts(){
+        PointsCalculator amountCalculator = new PointsCalculator();
+        assertThrows(IllegalArgumentException.class, () ->{
+             amountCalculator.calculatePoints("m1", -100.0);
+        });
+            
+            
+
     }
 }
