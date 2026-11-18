@@ -8,10 +8,10 @@ public class PointsCalculator {
     private final MemberRepository repository = new InMemoryMemberRepository();
 
     public int calculatePoints(String memberId, double amount) {
-        if (amount < 0){
-             throw new IllegalArgumentException("Amount cannot be negative");
+        if (amount < 0 || !Double.isFinite(amount)){
+             throw new IllegalArgumentException("Amount must be a finite number and cannot be negative");
             }
-        
+            
             Member member = repository.findById(memberId);
         
 
