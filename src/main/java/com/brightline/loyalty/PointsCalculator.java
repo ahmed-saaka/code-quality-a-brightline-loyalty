@@ -8,15 +8,21 @@ public class PointsCalculator {
     private final MemberRepository repository = new InMemoryMemberRepository();
 
     public int calculatePoints(String memberId, double amount) {
+        if (amount < 0){
+             throw new IllegalArgumentException("Amount cannot be negative");
+            }
         
             Member member = repository.findById(memberId);
+        
 
             // base points: one point for every GHS 10 spent
           
             if (member == null) {
                 throw new IllegalArgumentException("Member not found");
             }
+           
               int points = (int) (amount / 10);
+
 
             // apply the member's tier multiplier
             if (member.getTier().equals("STANDARD")) {
@@ -28,6 +34,7 @@ public class PointsCalculator {
             }
 
             // loyalty bonus for big spenders
+            
             if (amount > 500) {
                 points = points + 50;
             }
@@ -36,4 +43,6 @@ public class PointsCalculator {
             return points;
         } 
     }
+
+    
             
