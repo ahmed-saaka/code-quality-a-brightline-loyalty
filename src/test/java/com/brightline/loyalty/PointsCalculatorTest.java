@@ -45,8 +45,30 @@ class PointsCalculatorTest {
         assertThrows(IllegalArgumentException.class, () ->{
              amountCalculator.calculatePoints("m1", -100.0);
         });
-            
-            
-
     }
+
+
+    @Test 
+    public void nanTest(){
+        PointsCalculator nanTester = new PointsCalculator();
+        assertThrows(IllegalArgumentException.class,() -> {
+            nanTester.calculatePoints("m1", Double.NaN);
+        });
+        }
+
+          @Test 
+    public void doublePositiveInfinityTest(){
+        PointsCalculator doublePositiveInfinityTester = new PointsCalculator();
+        assertThrows(IllegalArgumentException.class,() -> {
+            doublePositiveInfinityTester.calculatePoints("m1", Double.POSITIVE_INFINITY);
+        });
+        }
+
+         @Test 
+    public void doublenegativeInfinityTest(){
+        PointsCalculator doubleNegativeInfinityTester = new PointsCalculator();
+        assertThrows(IllegalArgumentException.class,() -> {
+            doubleNegativeInfinityTester.calculatePoints("m1", Double.NEGATIVE_INFINITY);
+        });
+        }
 }
