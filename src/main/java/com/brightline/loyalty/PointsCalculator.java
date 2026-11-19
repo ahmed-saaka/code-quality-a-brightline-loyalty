@@ -5,52 +5,66 @@ import java.math.BigDecimal;
 
 public class PointsCalculator {
 
-    // The calculator makes its own repository.
+    // Repository dependency supplied through the constructor.
     private final MemberRepository repository;
 
     public PointsCalculator(MemberRepository repository) {
         this.repository = repository;
     }
 
-    public int calculatePoints(String memberId, BigDecimal amount) {
-
-        // Validate purchase amount
+    private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount must not be null or negative");
+            throw new IllegalArgumentException(
+                    "Amount must not be null or negative");
         }
+    }
 
+    private Member findMember(String memberId) {
         Member member = repository.findById(memberId);
 
-        // Check whether member exists
         if (member == null) {
             throw new IllegalArgumentException("Member not found");
         }
 
-        // Base points: one point for every GHS 10 spent
-        int points = amount.divide(BigDecimal.TEN).intValue();
+        return member;
+    }
 
-        // Apply the member's tier multiplier
-        if (member.getTier().equals("STANDARD")) {
+    public int calculatePoints(String memberId, BigDecimal amount) {
+        validateAmount(amount);
+        Member member = findMember(memberId);
+        int points = calculateBasePoints(amount);
+        points = applyTierMultiplier(points, member.getTier());
+       points=applyBonus(amount, points);
+        
+        return points;
+    }
+
+    private int  applyBonus(BigDecimal amount, int points){
+         if (amount.compareTo(BigDecimal.valueOf(500)) > 0) {
+            points = points + 50;
+        }
+        return points;
+    }
+
+    private int calculateBasePoints(BigDecimal amount) {
+        int points = amount.divide(BigDecimal.TEN).intValue();
+        return points;
+    }
+
+    private int applyTierMultiplier(int points, String tier) {
+        if (tier.equals("STANDARD")) {
             points = points * 1;
 
-        } else if (member.getTier().equals("SILVER")) {
-
+        } else if (tier.equals("SILVER")) {
             BigDecimal multiplier = new BigDecimal("1.5");
 
             points = BigDecimal.valueOf(points)
                     .multiply(multiplier)
                     .intValue();
 
-        } else if (member.getTier().equals("GOLD")) {
+        } else if (tier.equals("GOLD")) {
             points = points * 2;
         }
-
-        // Loyalty bonus for big spenders
-        if (amount.compareTo(BigDecimal.valueOf(500)) > 0) {
-            points = points + 50;
-        }
-
-        System.out.println("Awarded " + points + " points to " + member.getName());
 
         return points;
     }
