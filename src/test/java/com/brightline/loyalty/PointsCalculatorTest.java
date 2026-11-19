@@ -10,7 +10,8 @@ class PointsCalculatorTest {
 
     @Test
     void awardsPointsToAMember() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         int points = calculator.calculatePoints(
                 "m1", new BigDecimal("100.00"));
@@ -20,7 +21,8 @@ class PointsCalculatorTest {
 
     @Test
     void calculatesGoldPoints() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         int points = calculator.calculatePoints(
                 "m2", new BigDecimal("250.00"));
@@ -30,7 +32,8 @@ class PointsCalculatorTest {
 
     @Test
     void awardsPointsForAPurchase() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         int points = calculator.calculatePoints(
                 "m3", new BigDecimal("200.00"));
@@ -40,7 +43,8 @@ class PointsCalculatorTest {
 
     @Test
     void throwsExceptionForUnknownMember() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         assertThrows(IllegalArgumentException.class, () -> {
             calculator.calculatePoints(
@@ -50,7 +54,8 @@ class PointsCalculatorTest {
 
     @Test
     void throwsExceptionForNegativeAmounts() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         assertThrows(IllegalArgumentException.class, () -> {
             calculator.calculatePoints(
@@ -60,7 +65,8 @@ class PointsCalculatorTest {
 
     @Test
     void throwsExceptionForNullAmount() {
-        PointsCalculator calculator = new PointsCalculator();
+        MemberRepository repository = new InMemoryMemberRepository();
+        PointsCalculator calculator = new PointsCalculator(repository);
 
         assertThrows(IllegalArgumentException.class, () -> {
             calculator.calculatePoints("m1", null);
