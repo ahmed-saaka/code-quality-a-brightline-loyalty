@@ -6,7 +6,11 @@ import java.math.BigDecimal;
 public class PointsCalculator {
 
     // The calculator makes its own repository.
-    private final MemberRepository repository = new InMemoryMemberRepository();
+    private final MemberRepository repository;
+
+    public PointsCalculator(MemberRepository repository) {
+        this.repository = repository;
+    }
 
     public int calculatePoints(String memberId, BigDecimal amount) {
 
