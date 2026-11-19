@@ -15,6 +15,23 @@ public class InMemoryMemberRepository implements MemberRepository {
 
     @Override
     public Member findById(String id) {
-        return members.get(id); // returns null when the id is not found
+        return members.get(id);
+    }
+
+    @Override
+    public void save(Member member) {
+
+        if (member == null) {
+            throw new IllegalArgumentException("Member cannot be null");
+        }
+
+        String id = member.getId();
+
+        if (members.containsKey(id)) {
+            throw new IllegalArgumentException(
+                    "Member ID already exists: " + id);
+        }
+
+        members.put(id, member);
     }
 }
