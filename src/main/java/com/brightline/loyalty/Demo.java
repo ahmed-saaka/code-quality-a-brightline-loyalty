@@ -18,6 +18,12 @@ public class Demo {
         System.out.println("Result m2 (GOLD), GHS 250 -> "
                 + calculator.calculatePoints("m2", new BigDecimal("250.00")));
 
+
+
+                System.out.println("Result m3(SILVER), GHS 500 -> "
+                    + calculator.calculatePoints("m3", new BigDecimal("500"))
+                );
+
         // Handle unknown member
         try {
             System.out.println("Result unknown member, GHS 100 -> "
