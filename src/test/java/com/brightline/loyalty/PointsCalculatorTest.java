@@ -202,6 +202,71 @@ public void ShouldHandleLargeAmounts(){
 
 
 
+@Test
+void shouldThrowExceptionWhenRepositoryIsNull() {
+
+    NullPointerException exception = assertThrows(
+            NullPointerException.class,
+            () -> new PointsCalculator(null)
+    );
+
+    assertEquals(
+            "MemberRepository cannot be null",
+            exception.getMessage()
+    );
+}
+
+
+@Test
+void shouldThrowExceptionWhenPointsAreNegative() {
+
+    SilverTier silverTier = new SilverTier();
+
+    assertThrows(
+            IllegalArgumentException.class,
+            () -> silverTier.calculatePoints(-10)
+    );
+}
+
+
+@Test
+void shouldThrowExceptionWhenPointsAreNegativeForGold() {
+
+    GoldTier goldTier = new GoldTier();
+
+    assertThrows(
+            IllegalArgumentException.class,
+            () -> goldTier.calculatePoints(-10)
+    );
+}
+
+
+
+
+
+@Test
+void shouldThrowExceptionWhenPointsCalculationOverflows() {
+
+    GoldTier goldTier = new GoldTier();
+
+    assertThrows(
+            ArithmeticException.class,
+            () -> goldTier.calculatePoints(Integer.MAX_VALUE)
+    );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 };
 

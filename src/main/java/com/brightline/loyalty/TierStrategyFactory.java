@@ -1,6 +1,7 @@
+
 package com.brightline.loyalty;
 
-
+import java.util.Locale;
 
 public class TierStrategyFactory {
 
@@ -11,7 +12,7 @@ public class TierStrategyFactory {
                     "Enter a valid membership tier: " + tier);
         }
 
-        switch (tier.toUpperCase()) {
+        switch (tier.toUpperCase(Locale.ROOT)) {
 
             case "STANDARD":
                 return new StandardTier();
@@ -28,5 +29,3 @@ public class TierStrategyFactory {
         }
     }
 }
-    
-

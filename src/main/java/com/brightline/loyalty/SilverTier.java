@@ -1,18 +1,25 @@
+
 package com.brightline.loyalty;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class SilverTier implements TierStrategy {
+
+    private static final BigDecimal SILVER_MULTIPLIER =
+            new BigDecimal("1.5");
+
     @Override
     public int calculatePoints(int points) {
-          BigDecimal multiplier = new BigDecimal("1.5");
 
-            return BigDecimal.valueOf(points)
-                    .multiply(multiplier)
-                    .setScale(0, RoundingMode.DOWN)
-                    .intValueExact();
-       
+        if (points < 0) {
+            throw new IllegalArgumentException(
+                    "Points cannot be negative");
+        }
+
+        return BigDecimal.valueOf(points)
+                .multiply(SILVER_MULTIPLIER)
+                .setScale(0, RoundingMode.DOWN)
+                .intValueExact();
     }
-    
 }

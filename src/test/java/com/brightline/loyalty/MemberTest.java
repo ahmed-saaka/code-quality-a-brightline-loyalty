@@ -1,142 +1,67 @@
+
 package com.brightline.loyalty;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
-@ExtendWith (MockitoExtension.class)
-public class MemberTest {
-    @Test 
-    void testExceptionIsThrown() {
-        assertThrows(RuntimeException.class, () -> {
-            throw new RuntimeException();
-        });
-    }
-
-    @Test 
-    void testInValidId(){
-        assertThrows(IllegalArgumentException.class, ()-> {
-            new Member(null, "med", "GOLD");
-           
-        });
-    }
-
-
-        @Test 
-    void testEmptyId(){
-        assertThrows(IllegalArgumentException.class, ()-> {
-            new Member("", "med", "GOLD");
-           
-        });
-    }
-
-           @Test 
-    void testwhiteSpaced(){
-        assertThrows(IllegalArgumentException.class, ()-> {
-            new Member("   ", "med", "GOLD");
-           
-        });
-    }
-
- @Mock
-    MemberRepository mockRepository;
-    @InjectMocks 
-    PointsCalculator calculator;
-    @Test
-   
-    void shouldRejectNullMembershipTier() {
-        // Set up the mock repository to return a specific member
-        Member mockMember = new Member("m5", "KWame",  null);
-        
-        when(mockRepository.findById("m5")).thenReturn(mockMember);
-
-        // Call the method under test
-                assertThrows(IllegalArgumentException.class,
-                        () -> calculator.calculatePoints("m5", new BigDecimal("100.00")));
-
-                verify(mockRepository, times(1)).findById("m5");
-        
-       
-    }
-
+class MemberTest {
 
     @Test
-public void shouldRejectUnsupportedMembershipTier() {
+    void shouldCreateMemberWithValidDetails() {
+        Member member = new Member("m1", "Kofi Mensah", "STANDARD");
 
-    MemberRepository repository = mock(MemberRepository.class);
-    PointsCalculator calculator = new PointsCalculator(repository);
+        assertEquals("m1", member.getId());
+        assertEquals("Kofi Mensah", member.getName());
+        assertEquals("STANDARD", member.getTier());
+    }
 
-    Member member = new Member("m4", "Kwame", "PLATINUM");
+    @Test
+    void shouldRejectNullId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member(null, "Kofi Mensah", "GOLD")
+        );
+    }
 
-    when(repository.findById("m4")).thenReturn(member);
+    @Test
+    void shouldRejectEmptyId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member("", "Kofi Mensah", "GOLD")
+        );
+    }
 
-    assertThrows(
-            IllegalArgumentException.class,
-            () -> calculator.calculatePoints(
-                    "m4",
-                    new BigDecimal("100")
-            )
-    );
+    @Test
+    void shouldRejectWhitespaceId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member("   ", "Kofi Mensah", "GOLD")
+        );
+    }
 
-    verify(repository, times(1)).findById("m4");
-}
+    @Test
+    void shouldRejectNullName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member("m1", null, "GOLD")
+        );
+    }
 
+    @Test
+    void shouldRejectEmptyName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member("m1", "", "GOLD")
+        );
+    }
 
-@Test
-public void shouldRejectUnknownMemberId() {
-
-    // Arrange
-    MemberRepository repository = mock(MemberRepository.class);
-    PointsCalculator calculator = new PointsCalculator(repository);
-
-    // Act & Assert
-    assertThrows(
-            IllegalArgumentException.class,
-            () -> calculator.calculatePoints(
-                    "m999",
-                    BigDecimal.valueOf(100)
-            )
-    );
-
-    // Verify that the repository was checked exactly once
-    verify(repository, times(1)).findById("m999");
-}
-
-
-
-
-@Test
-void shouldRejectEmptyMembershipTier(){
-    Member member = new Member("m6", "Akua", "");
-    when(mockRepository.findById("m6")).thenReturn(member);
-    assertThrows(IllegalArgumentException.class, () ->
-     calculator.calculatePoints("m6", new BigDecimal("100")));
-     verify(mockRepository, times(1)).findById("m6");
-
-}
-
-@Test
-void shouldRejectWhitespaceMembershipTier(){
-    Member member = new Member("m6", "Akua", " ");
-    when(mockRepository.findById("m6")).thenReturn(member);
-    assertThrows(IllegalArgumentException.class, () ->
-     calculator.calculatePoints("m6", new BigDecimal("100")));
-     verify(mockRepository, times(1)).findById("m6");
-
-}
-
-
-
-
-
+    @Test
+    void shouldRejectWhitespaceName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Member("m1", "   ", "GOLD")
+        );
+    }
 }

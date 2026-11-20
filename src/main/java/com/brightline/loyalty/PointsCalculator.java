@@ -2,17 +2,28 @@
 package com.brightline.loyalty;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Objects;
 
 public class PointsCalculator {
 
-    // Repository dependency supplied through the constructor.
+    // Business rule constants
+    private static final BigDecimal BONUS_THRESHOLD =
+            BigDecimal.valueOf(500);
+
+    private static final int BONUS_POINTS = 50;
+
+    private static final BigDecimal AMOUNT_PER_BASE_POINT =
+            BigDecimal.TEN;
+
+    // Dependencies
     private final MemberRepository repository;
+
     private final TierStrategyFactory strategyFactory =
-        new TierStrategyFactory();
+            new TierStrategyFactory();
 
     public PointsCalculator(MemberRepository repository) {
-        this.repository = repository;
+        this.repository = Objects.requireNonNull(
+                repository, "MemberRepository cannot be null");
     }
 
     private void validateAmount(BigDecimal amount) {
@@ -56,15 +67,15 @@ public class PointsCalculator {
 
     private int applyTierMultiplier(int points, String tier) {
 
-    TierStrategy strategy = strategyFactory.getStrategy(tier);
+        TierStrategy strategy = strategyFactory.getStrategy(tier);
 
-    return strategy.calculatePoints(points);
-}
+        return strategy.calculatePoints(points);
+    }
 
     private int applyBonus(BigDecimal amount, int points) {
 
-        if (amount.compareTo(BigDecimal.valueOf(500)) > 0) {
-            points = Math.addExact(points, 50);
+        if (amount.compareTo(BONUS_THRESHOLD) > 0) {
+            points = Math.addExact(points, BONUS_POINTS);
         }
 
         return points;
@@ -72,9 +83,7 @@ public class PointsCalculator {
 
     private int calculateBasePoints(BigDecimal amount) {
 
-        return amount.divideToIntegralValue(BigDecimal.TEN)
+        return amount.divideToIntegralValue(AMOUNT_PER_BASE_POINT)
                 .intValueExact();
     }
-
-   
 }

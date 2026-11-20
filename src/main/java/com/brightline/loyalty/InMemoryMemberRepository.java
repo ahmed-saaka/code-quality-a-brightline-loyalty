@@ -1,3 +1,4 @@
+
 package com.brightline.loyalty;
 
 import java.util.HashMap;
@@ -15,12 +16,16 @@ public class InMemoryMemberRepository implements MemberRepository {
 
     @Override
     public Member findById(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Member ID cannot be null or empty");
+        }
+
         return members.get(id);
     }
 
     @Override
     public void save(Member member) {
-
         if (member == null) {
             throw new IllegalArgumentException("Member cannot be null");
         }
