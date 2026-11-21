@@ -1,4 +1,3 @@
-
 package com.brightline.loyalty.infrastructure;
 
 import java.util.HashMap;

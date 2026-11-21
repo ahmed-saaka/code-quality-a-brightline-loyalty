@@ -12,7 +12,7 @@ The original implementation supported three membership tiers:
 
 The initial codebase had several weaknesses affecting correctness, maintainability, and testability.
 
-The most serious issue was the broad exception handler in `PointsCalculator.calculatePoints()`. It caught every `Exception` and returned `0`, making a failed calculation indistinguishable from a valid zero-point result.
+The most serious correctness issue was the lack of purchase-amount validation: a negative purchase could produce negative loyalty points. The tracked original code did not contain a broad exception handler; it explicitly threw `IllegalArgumentException` when a member was not found. Error swallowing is therefore not an original-code defect.
 
 Other issues included:
 
@@ -26,9 +26,7 @@ Other issues included:
 
 The application was refactored to address these problems through clearer separation of responsibilities, constructor dependency injection, tier strategies, explicit validation, `BigDecimal`, and stronger automated tests.
 
-The refactored application was successfully tested using a clean Maven build. All **53 tests passed**, with no failures, errors, or skipped tests.
-
-Additional verification using PIT mutation testing achieved **100% mutation test strength**, with all 42 generated mutations killed.
+The refactored application was verified on **2026-11-21** using a clean Maven build. The current test count and PIT results are recorded in Section 7.
 
 ---
 
@@ -44,7 +42,7 @@ The original implementation contained five Java classes:
 | `Member` | Represented a loyalty member. |
 | `MemberRepository` | Defined the member lookup contract. |
 | `InMemoryMemberRepository` | Stored and retrieved predefined members. |
-| `PointsCalculator` | Retrieved members, calculated points, applied tier rules, printed results, and handled exceptions. |
+| `PointsCalculator` | Retrieved members, calculated points, applied tier rules, printed results, and explicitly rejected missing members. |
 
 The main design concern was that `PointsCalculator` performed several different responsibilities instead of focusing on points calculation.
 
@@ -72,35 +70,23 @@ The bonus condition was strictly greater than GHS 500. A purchase of exactly GHS
 
 | Area | Original problem | Impact |
 |---|---|---|
-| Exception handling | Broad `catch (Exception)` returned zero. | Hidden failures appeared to be successful calculations. |
+| Exception handling | No broad catch existed; missing-member lookup explicitly threw `IllegalArgumentException`. | Failure was not swallowed, but missing-member failure had no dedicated exception type. |
 | Class responsibilities | Calculator handled lookup, calculations, printing, and exception handling. | Difficult to maintain and test independently. |
 | Dependency management | Calculator constructed `InMemoryMemberRepository` directly. | Difficult to replace storage or provide controlled test dependencies. |
 | Tier calculations | Hard-coded conditional branches. | Adding a tier required modifying existing calculation logic. |
 | Numeric constants | Business values were embedded in the method. | Rules were harder to understand and maintain. |
 | Tier representation | Membership tiers were represented as strings. | Unsupported or misspelled values could enter the application. |
 | Numeric precision | Monetary values used `double`. | Binary floating-point representation could introduce precision surprises. |
-| Purchase validation | Invalid amounts were not adequately validated. | Negative or unusual values could affect calculations. |
-| Member lookup | Missing members were represented by `null`. | The calculator could encounter an unclear failure. |
+| Purchase validation | Null, zero, and negative amounts were not rejected. | A negative purchase could produce a negative points award. |
+| Member lookup | The repository represented missing members with `null`. | Callers had to interpret nullable lookup results; the calculator explicitly threw for a missing ID. |
 | Console output | Calculation method printed directly to the console. | Calculation logic had unnecessary side effects. |
 | Member validation | Constructor did not validate required information. | Invalid member objects could be created. |
 
-### 2.4 Most serious original problem: exception handling
+### 2.4 Most serious original problem: missing purchase validation
 
-The original calculator caught every exception and returned `0`.
+The original calculator converted the purchase amount to base points without first checking that the amount was positive. A STANDARD member's GHS -100 purchase therefore produced -10 points. The code had no refund/reversal rule that would make this negative award meaningful, so accepting it could corrupt a member's points balance.
 
-This created ambiguity because the same return value could represent:
-
-- A valid calculation earning zero points.
-- A missing member.
-- Invalid input.
-- A repository failure.
-- An unexpected programming error.
-
-For example, an unknown member caused a `NullPointerException` when the calculator attempted to access the member's tier. The broad exception handler concealed the problem and returned zero.
-
-This prevented the caller from knowing whether the calculation had actually succeeded.
-
-**Required improvement:** A failed calculation should produce a meaningful failure outcome rather than being silently converted into a valid points result.
+The original implementation did **not** catch every exception or convert failures to zero. For an unknown member, it explicitly threw `IllegalArgumentException("Member not found")`. The correct improvement is to validate purchase amounts and use a more specific missing-member exception, not to claim that an original broad catch swallowed failures.
 
 ### 2.5 Original testing problems
 
@@ -210,11 +196,11 @@ The repository lookup contract now returns `Optional<Member>`.
 
 This makes the possibility of a missing member explicit.
 
-The calculator uses `orElseThrow()` to produce an `IllegalArgumentException` with the message:
+The calculator uses `orElseThrow()` to produce a `MemberNotFoundException` with the message:
 
 `Member not found`
 
-This is clearer than allowing a `NullPointerException` to occur and hiding it through broad exception handling.
+This gives callers a specific missing-member failure instead of the original generic `IllegalArgumentException`.
 
 ### 4.3 Tier strategy implementation
 
@@ -232,7 +218,9 @@ The `TierStrategyFactory` selects the appropriate implementation based on the me
 
 This removes the tier-specific conditional chain from the points calculator.
 
-A new tier still requires adding its enum value, implementing its strategy, and updating the factory. However, the calculator itself does not need another tier-specific conditional branch.
+A missing registry entry raises `IllegalStateException`, identifying a wiring error rather than invalid purchase input.
+
+A registry supplied to the factory maps each enum value to a strategy, so a composition root can register another strategy without adding a switch arm to the factory. Adding a tier still requires updating `MembershipTier`, implementing a strategy, and adding the mapping to the configured registry. The no-argument factory constructor is retained as a convenience for built-in tiers, so extending that default registry still requires updating the constructor.
 
 ### 4.4 Monetary precision with BigDecimal
 
@@ -350,7 +338,7 @@ Each component now has a clearer responsibility.
 
 ### 6.2 Open/Closed Principle (OCP)
 
-**Assessment: Improved, with a remaining factory modification**
+**Assessment: Improved, with registry wiring as a remaining responsibility**
 
 The original calculator contained hard-coded tier conditions.
 
@@ -358,9 +346,9 @@ The refactored application introduces a common `TierStrategy` abstraction and se
 
 This allows tier-specific calculation behaviour to be added without introducing another conditional branch in `PointsCalculator`.
 
-However, the current `TierStrategyFactory` uses a switch statement, so a new tier still requires an update to the enum and factory.
+`TierStrategyFactory` now accepts an immutable strategy registry. Applications that inject a registry can add a tier mapping in their composition code without changing the factory.
 
-The design therefore improves extensibility but does not eliminate every modification when a new tier is introduced.
+The convenience no-argument factory retains a built-in registry and must be updated if that default is to include a new tier. This keeps existing construction straightforward while enabling explicit registration for applications that need it.
 
 ### 6.3 Liskov Substitution Principle (LSP)
 
@@ -399,7 +387,7 @@ This separates the high-level calculation use case from the concrete storage imp
 | Principle | Assessment | Evidence |
 |---|---|---|
 | SRP | Improved | Responsibilities are separated across domain, application, and infrastructure components. |
-| OCP | Improved, with limitation | Tier strategies remove tier-specific branches from the calculator, but the factory and enum require updates for new tiers. |
+| OCP | Improved, with registry wiring | The calculator and factory have no tier-specific branching; the enum and the registry supplied by the composition root need a new entry. The built-in default registry also needs extending if used. |
 | LSP | Supported by current abstractions | Repository and strategy implementations follow their defined contracts. |
 | ISP | Followed | Interfaces remain focused. |
 | DIP | Improved | The calculator receives the repository abstraction through constructor injection. |
@@ -410,9 +398,7 @@ This separates the high-level calculation use case from the concrete storage imp
 
 ### 7.1 Improvements to test quality
 
-The refactored test suite uses real calculation objects and tests their actual behaviour.
-
-Mockito is used to control dependencies where appropriate rather than mocking the class whose calculation logic is being tested.
+The refactored test suite uses real calculation objects and tests their actual behaviour. Small repository fixtures are used where a test needs to verify validation order; the project does not add a mocking framework dependency.
 
 The tests now use exact assertions for expected points.
 
@@ -481,6 +467,8 @@ The tests verify three important purchase amounts:
 
 These tests protect the requirement that the purchase must be strictly greater than GHS 500.
 
+Additional tests verify that GHS 9.99 earns zero base points and that the SILVER and GOLD multipliers are applied before a bonus on purchases above GHS 500. The expected totals for GHS 600 are 140 for SILVER and 170 for GOLD.
+
 ### 7.4 Maven verification result
 
 The project was tested using:
@@ -493,16 +481,18 @@ The clean build deleted previous compiled output, recompiled the production and 
 
 **Verified result:**
 
+Run date: **2026-11-21**
+
 | Result | Count |
 |---|---:|
-| Tests run | 53 |
+| Tests run | 60 |
 | Failures | 0 |
 | Errors | 0 |
 | Skipped | 0 |
 
 **Build result: BUILD SUCCESS**
 
-This confirms that the current production code compiles and all 53 automated tests pass in the clean Maven test run.
+This records the result of that clean Maven test run; it is not a guarantee for future changes.
 
 ### 7.5 Mutation testing with PIT
 
@@ -516,15 +506,18 @@ PIT introduces small changes (mutations) into the production code to check wheth
 
 **Verified results:**
 
+Run date: **2026-11-21**
+
 | Result | Count |
 |---|---:|
-| Mutations generated | 42 |
-| Mutations killed | 42 |
+| Mutations generated | 48 |
+| Mutations killed | 48 |
 | Mutations survived | 0 |
+| Mutations without coverage | 0 |
 | Mutation test strength | 100% |
-| Line coverage of mutated classes | 98% (96/98) |
+| Line coverage of mutated classes | 100% (112/112) |
 
-All 42 generated mutations were killed by the test suite. This indicates that the tests detected the behavioural changes introduced by the mutations.
+All 48 generated mutations were killed; none survived or lacked coverage.
 
 The PIT report is available at:
 
@@ -532,7 +525,7 @@ The PIT report is available at:
 target/pit-reports/index.html
 ```
 
-The 98% line coverage figure refers specifically to the classes analysed by PIT. It should not be interpreted as a claim that every class in the entire application has 98% coverage.
+The 100% line coverage figure (112/112 lines) refers specifically to the classes analysed by PIT. It should not be interpreted as a claim that every class in the entire application has 100% coverage.
 
 ---
 
@@ -542,21 +535,15 @@ The refactored application is significantly better structured, but there are sti
 
 ### 8.1 Tier registration
 
-The current factory uses a switch statement.
-
-If additional membership tiers are introduced, the enum and factory must be updated.
-
-A registry-based approach could reduce the need to modify the factory whenever another strategy is added.
+The factory now accepts a strategy registry, so callers can supply new tier mappings without modifying factory logic. The no-argument convenience constructor still defines the built-in registry and must be updated if it remains the wiring choice for a new default tier.
 
 ### 8.2 More precise error types
 
-The current implementation uses `IllegalArgumentException` for a missing member.
-
-A dedicated `MemberNotFoundException` could communicate that failure more specifically if the application grows and needs to distinguish different error conditions.
+Missing members now produce `MemberNotFoundException`, while invalid inputs continue to produce `IllegalArgumentException`. A broader application may still translate these exceptions at its own boundary.
 
 ### 8.3 Application-level failure handling
 
-The current `Demo` handles the unknown-member exception and displays a message.
+The `Demo` writes ordinary output to `System.out` and missing-member or invalid-input messages to `System.err`. This is appropriate for a small CLI demonstration, not a production logging strategy.
 
 A larger application may require a dedicated application boundary for logging, translating, and presenting different failures.
 
@@ -564,7 +551,7 @@ A larger application may require a dedicated application boundary for logging, t
 
 JaCoCo and PIT have both been used to assess the test suite.
 
-The PIT results show 98% line coverage across mutated classes and 100% mutation test strength.
+The PIT run's line-coverage and mutation-strength results are specific to the verification date in Section 7 and apply only to classes PIT analyzed.
 
 Future work could focus on investigating the remaining uncovered lines and maintaining strong mutation-test results as new functionality is introduced.
 
@@ -576,7 +563,7 @@ A passing unit-test suite is useful evidence, but coverage and mutation results 
 
 The original Brightline Loyalty application provided a basic implementation of loyalty-point calculations, but its design contained weaknesses that affected reliability, maintainability, and testability.
 
-The most serious issue was the broad exception handler that converted failures into zero points. This made it difficult for callers to distinguish successful calculations from failed operations.
+The most serious original issue was missing purchase validation, which allowed negative purchase amounts to produce negative points. The original implementation did not have a broad exception handler: it explicitly threw `IllegalArgumentException` for an unknown member.
 
 The refactoring addressed the main issues by:
 
@@ -591,10 +578,8 @@ The refactoring addressed the main issues by:
 9. Moving console output out of the calculation logic.
 10. Strengthening automated tests with exact assertions and boundary-value scenarios.
 
-The clean Maven test run completed successfully with **53 tests passing and no failures or errors**.
+The clean Maven and PIT results, with their run date and exact counts, are recorded in Section 7. These are run-specific results and not guarantees for later changes.
 
-PIT mutation testing also achieved **100% mutation test strength**, with all 42 generated mutations killed and no surviving mutations.
-
-The refactored application now has a clearer structure, more explicit failure handling, and stronger automated verification. Although the tier factory still requires modification when a new tier is introduced, the tier-specific calculation logic is now separated from the main calculator.
+The refactored application now has a clearer structure, more explicit failure handling, and stronger automated verification. New tier strategies can be supplied through registry wiring; the built-in default registry remains a convenience that must be extended when a new default tier is introduced.
 
 These improvements provide a stronger foundation for maintaining and extending Brightline Loyalty while protecting the correctness of its existing calculation rules.

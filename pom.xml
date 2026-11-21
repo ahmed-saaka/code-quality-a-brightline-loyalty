@@ -94,8 +94,6 @@
                 <configuration>
                     <targetClasses>
                         <param>com.brightline.loyalty.*</param>
-                        <param>com.brightline.loyalty.app.*</param>
-                        <param>com.brightline.loyalty.infrastructure.*</param>
                     </targetClasses>
                     <targetTests>
                         <param>com.brightline.loyalty.*</param>

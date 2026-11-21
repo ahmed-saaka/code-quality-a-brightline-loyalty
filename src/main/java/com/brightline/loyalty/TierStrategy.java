@@ -1,4 +1,3 @@
-
 package com.brightline.loyalty;
 
 /**
@@ -10,9 +9,9 @@ public interface TierStrategy {
     /**
      * Calculates points using the rules of a specific tier.
      *
-     * @param points the base points to calculate
+     * @param basePoints the base points to calculate
      * @return the calculated loyalty points
-     * @throws IllegalArgumentException if points are negative
+     * @throws IllegalArgumentException if base points are negative
      */
-    int calculatePoints(int points);
+    int calculatePoints(int basePoints);
 }

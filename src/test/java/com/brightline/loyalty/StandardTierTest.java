@@ -1,4 +1,3 @@
-
 package com.brightline.loyalty;
 
 import org.junit.jupiter.api.Test;
@@ -36,4 +35,3 @@ class StandardTierTest {
         assertEquals(0, result);
     }
 }
-
