@@ -12,16 +12,12 @@ import com.brightline.loyalty.TierStrategyFactory;
 
 public class PointsCalculator {
 
-    // Business rule constants
     private static final BigDecimal BONUS_THRESHOLD =
             BigDecimal.valueOf(500);
-
     private static final int BONUS_POINTS = 50;
-
     private static final BigDecimal AMOUNT_PER_BASE_POINT =
             BigDecimal.TEN;
 
-    // Dependencies
     private final MemberRepository repository;
     private final TierStrategyFactory strategyFactory;
 
@@ -39,7 +35,6 @@ public class PointsCalculator {
     }
 
     private void validateAmount(BigDecimal amount) {
-
         if (amount == null) {
             throw new IllegalArgumentException(
                     "Purchase amount cannot be null");
@@ -58,12 +53,10 @@ public class PointsCalculator {
         }
 
         return repository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Member not found"));
+                .orElseThrow(MemberNotFoundException::new);
     }
 
     public int calculatePoints(String memberId, BigDecimal amount) {
-
         validateAmount(amount);
 
         Member member = findMember(memberId);
@@ -83,16 +76,14 @@ public class PointsCalculator {
     }
 
     private int applyBonus(BigDecimal amount, int points) {
-
         if (amount.compareTo(BONUS_THRESHOLD) > 0) {
-            points = Math.addExact(points, BONUS_POINTS);
+            return Math.addExact(points, BONUS_POINTS);
         }
 
         return points;
     }
 
     private int calculateBasePoints(BigDecimal amount) {
-
         return amount.divideToIntegralValue(AMOUNT_PER_BASE_POINT)
                 .intValueExact();
     }

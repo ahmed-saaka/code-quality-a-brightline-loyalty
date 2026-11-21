@@ -2,6 +2,8 @@ package com.brightline.loyalty;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import com.brightline.loyalty.app.MemberNotFoundException;
 import com.brightline.loyalty.app.PointsCalculator;
 import com.brightline.loyalty.infrastructure.InMemoryMemberRepository;
 
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 class PointsCalculatorTest {
 
     @Test
@@ -42,12 +45,12 @@ class PointsCalculatorTest {
     }
 
     @Test
-    void throwsExceptionForUnknownMember() {
+    void throwsMemberNotFoundExceptionForUnknownMember() {
         PointsCalculator calculator =
                 new PointsCalculator(new InMemoryMemberRepository());
 
         assertThrows(
-                IllegalArgumentException.class,
+                MemberNotFoundException.class,
                 () -> calculator.calculatePoints(
                         "unknown", new BigDecimal("100.00")));
     }
@@ -133,6 +136,36 @@ class PointsCalculatorTest {
         assertEquals(
                 49,
                 calculator.calculatePoints("m1", new BigDecimal("499.99")));
+    }
+
+    @Test
+    void awardsZeroBasePointsForPurchaseBelowTen() {
+        PointsCalculator calculator =
+                new PointsCalculator(new InMemoryMemberRepository());
+
+        assertEquals(
+                0,
+                calculator.calculatePoints("m1", new BigDecimal("9.99")));
+    }
+
+    @Test
+    void addsBonusAfterSilverMultiplierAboveThreshold() {
+        PointsCalculator calculator =
+                new PointsCalculator(new InMemoryMemberRepository());
+
+        assertEquals(
+                140,
+                calculator.calculatePoints("m3", new BigDecimal("600.00")));
+    }
+
+    @Test
+    void addsBonusAfterGoldMultiplierAboveThreshold() {
+        PointsCalculator calculator =
+                new PointsCalculator(new InMemoryMemberRepository());
+
+        assertEquals(
+                170,
+                calculator.calculatePoints("m2", new BigDecimal("600.00")));
     }
 
     @Test
