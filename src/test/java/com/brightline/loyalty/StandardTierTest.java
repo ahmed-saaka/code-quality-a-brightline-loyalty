@@ -1,6 +1,4 @@
 
-
-
 package com.brightline.loyalty;
 
 import org.junit.jupiter.api.Test;
@@ -30,13 +28,12 @@ class StandardTierTest {
     }
 
     @Test
-void shouldReturnZeroWhenPointsAreZero() {
-    StandardTier standardTier = new StandardTier();
+    void shouldReturnZeroWhenPointsAreZero() {
+        StandardTier standardTier = new StandardTier();
 
-    int result = standardTier.calculatePoints(0);
+        int result = standardTier.calculatePoints(0);
 
-    assertEquals(0, result);
+        assertEquals(0, result);
+    }
 }
-}
-
 

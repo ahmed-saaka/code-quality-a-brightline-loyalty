@@ -1,9 +1,14 @@
 
 package com.brightline.loyalty;
 
+import java.util.Optional;
+
+import com.brightline.loyalty.infrastructure.InMemoryMemberRepository;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryMemberRepositoryTest {
 
@@ -12,31 +17,28 @@ class InMemoryMemberRepositoryTest {
         MemberRepository repository = new InMemoryMemberRepository();
 
         Member member = new Member(
-                "m4", "John Doe", "STANDARD");
+                "m4", "John Doe", MembershipTier.STANDARD);
 
         repository.save(member);
 
-        assertEquals(member, repository.findById("m4"));
+        assertEquals(Optional.of(member), repository.findById("m4"));
     }
 
     @Test
     void findsExistingMemberById() {
         MemberRepository repository = new InMemoryMemberRepository();
 
-        Member member = repository.findById("m1");
+        Member member = repository.findById("m1").orElseThrow();
 
-        assertNotNull(member);
         assertEquals("m1", member.getId());
         assertEquals("Kofi Mensah", member.getName());
     }
 
     @Test
-    void returnsNullWhenMemberDoesNotExist() {
+    void returnsEmptyOptionalWhenMemberDoesNotExist() {
         MemberRepository repository = new InMemoryMemberRepository();
 
-        Member member = repository.findById("m999");
-
-        assertNull(member);
+        assertTrue(repository.findById("m999").isEmpty());
     }
 
     @Test
@@ -74,7 +76,7 @@ class InMemoryMemberRepositoryTest {
         MemberRepository repository = new InMemoryMemberRepository();
 
         Member duplicateMember = new Member(
-                "m1", "John Doe", "GOLD");
+                "m1", "John Doe", MembershipTier.GOLD);
 
         assertThrows(
                 IllegalArgumentException.class,

@@ -1,8 +1,14 @@
 
-package com.brightline.loyalty;
+package com.brightline.loyalty.app;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+
+import com.brightline.loyalty.Member;
+import com.brightline.loyalty.MemberRepository;
+import com.brightline.loyalty.MembershipTier;
+import com.brightline.loyalty.TierStrategy;
+import com.brightline.loyalty.TierStrategyFactory;
 
 public class PointsCalculator {
 
@@ -17,13 +23,19 @@ public class PointsCalculator {
 
     // Dependencies
     private final MemberRepository repository;
-
-    private final TierStrategyFactory strategyFactory =
-            new TierStrategyFactory();
+    private final TierStrategyFactory strategyFactory;
 
     public PointsCalculator(MemberRepository repository) {
+        this(repository, new TierStrategyFactory());
+    }
+
+    public PointsCalculator(
+            MemberRepository repository,
+            TierStrategyFactory strategyFactory) {
         this.repository = Objects.requireNonNull(
                 repository, "MemberRepository cannot be null");
+        this.strategyFactory = Objects.requireNonNull(
+                strategyFactory, "TierStrategyFactory cannot be null");
     }
 
     private void validateAmount(BigDecimal amount) {
@@ -40,14 +52,14 @@ public class PointsCalculator {
     }
 
     private Member findMember(String memberId) {
-
-        Member member = repository.findById(memberId);
-
-        if (member == null) {
-            throw new IllegalArgumentException("Member not found");
+        if (memberId == null || memberId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Member ID cannot be null or empty");
         }
 
-        return member;
+        return repository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Member not found"));
     }
 
     public int calculatePoints(String memberId, BigDecimal amount) {
@@ -65,10 +77,8 @@ public class PointsCalculator {
         return points;
     }
 
-    private int applyTierMultiplier(int points, String tier) {
-
+    private int applyTierMultiplier(int points, MembershipTier tier) {
         TierStrategy strategy = strategyFactory.getStrategy(tier);
-
         return strategy.calculatePoints(points);
     }
 

@@ -1,8 +1,10 @@
 package com.brightline.loyalty;
 
+import java.util.Optional;
+
 public interface MemberRepository {
 
-    Member findById(String id);
+    Optional<Member> findById(String id);
 
     void save(Member member);
 }

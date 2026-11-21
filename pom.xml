@@ -12,7 +12,6 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.13.4</junit.version>
-        <mockito.version>5.18.0</mockito.version>
         <jacoco.version>0.8.12</jacoco.version>
         <pitest.version>1.16.1</pitest.version>
         <pitest.junit5.version>1.2.1</pitest.junit5.version>
@@ -42,18 +41,6 @@
             <artifactId>junit-platform-launcher</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -61,11 +48,19 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
 
-            <!-- Coverage: mvn verify, then open target/site/jacoco/index.html -->
+            <!-- Coverage: ./mvnw verify, then open target/site/jacoco/index.html -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -83,7 +78,7 @@
                 </executions>
             </plugin>
 
-            <!-- Mutation testing: mvn test-compile org.pitest:pitest-maven:mutationCoverage
+            <!-- Mutation testing: ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage
                  then open target/pit-reports/index.html -->
             <plugin>
                 <groupId>org.pitest</groupId>
@@ -99,9 +94,12 @@
                 <configuration>
                     <targetClasses>
                         <param>com.brightline.loyalty.*</param>
+                        <param>com.brightline.loyalty.app.*</param>
+                        <param>com.brightline.loyalty.infrastructure.*</param>
                     </targetClasses>
                     <targetTests>
                         <param>com.brightline.loyalty.*</param>
+                        <param>com.brightline.loyalty.app.*</param>
                     </targetTests>
                 </configuration>
             </plugin>

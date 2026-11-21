@@ -1,31 +1,17 @@
 
 package com.brightline.loyalty;
 
-import java.util.Locale;
-
 public class TierStrategyFactory {
 
-    public TierStrategy getStrategy(String tier) {
-
-        if (tier == null || tier.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Enter a valid membership tier: " + tier);
+    public TierStrategy getStrategy(MembershipTier tier) {
+        if (tier == null) {
+            throw new IllegalArgumentException("Membership tier cannot be null");
         }
 
-        switch (tier.toUpperCase(Locale.ROOT)) {
-
-            case "STANDARD":
-                return new StandardTier();
-
-            case "SILVER":
-                return new SilverTier();
-
-            case "GOLD":
-                return new GoldTier();
-
-            default:
-                throw new IllegalArgumentException(
-                        "Unsupported membership tier: " + tier);
-        }
+        return switch (tier) {
+            case STANDARD -> new StandardTier();
+            case SILVER -> new SilverTier();
+            case GOLD -> new GoldTier();
+        };
     }
 }

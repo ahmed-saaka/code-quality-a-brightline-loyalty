@@ -1,9 +1,13 @@
 
 package com.brightline.loyalty;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TierStrategyFactoryTest {
 
@@ -12,37 +16,32 @@ class TierStrategyFactoryTest {
 
     @Test
     void shouldReturnStandardTier() {
-        TierStrategy strategy = factory.getStrategy("STANDARD");
+        TierStrategy strategy =
+                factory.getStrategy(MembershipTier.STANDARD);
 
         assertInstanceOf(StandardTier.class, strategy);
     }
 
     @Test
     void shouldReturnSilverTier() {
-        TierStrategy strategy = factory.getStrategy("SILVER");
+        TierStrategy strategy =
+                factory.getStrategy(MembershipTier.SILVER);
 
         assertInstanceOf(SilverTier.class, strategy);
     }
 
     @Test
     void shouldReturnGoldTier() {
-        TierStrategy strategy = factory.getStrategy("GOLD");
+        TierStrategy strategy =
+                factory.getStrategy(MembershipTier.GOLD);
 
         assertInstanceOf(GoldTier.class, strategy);
     }
 
-    @Test
-    void shouldAcceptLowercaseTier() {
-        TierStrategy strategy = factory.getStrategy("gold");
-
-        assertInstanceOf(GoldTier.class, strategy);
-    }
-
-    @Test
-    void shouldAcceptMixedCaseTier() {
-        TierStrategy strategy = factory.getStrategy("SiLvEr");
-
-        assertInstanceOf(SilverTier.class, strategy);
+    @ParameterizedTest
+    @EnumSource(MembershipTier.class)
+    void shouldReturnNonNullStrategyForEveryTier(MembershipTier tier) {
+        assertNotNull(factory.getStrategy(tier));
     }
 
     @Test
@@ -50,30 +49,6 @@ class TierStrategyFactoryTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> factory.getStrategy(null)
-        );
-    }
-
-    @Test
-    void shouldRejectEmptyTier() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> factory.getStrategy("")
-        );
-    }
-
-    @Test
-    void shouldRejectWhitespaceTier() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> factory.getStrategy("   ")
-        );
-    }
-
-    @Test
-    void shouldRejectUnsupportedTier() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> factory.getStrategy("PLATINUM")
         );
     }
 }
